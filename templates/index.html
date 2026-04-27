@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vayu — India Weather & AQI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Mono:wght@300;400;500&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --black: #0a0a0a;
+      --white: #f5f5f0;
+      --grey-100: #e8e8e3;
+      --grey-200: #d0d0c8;
+      --grey-400: #888880;
+      --grey-600: #444440;
+      --grey-800: #222220;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Crimson Pro', Georgia, serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    .bg-lines {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .bg-lines::before, .bg-lines::after {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 1px;
+      background: rgba(245,245,240,0.04);
+    }
+    .bg-lines::before { left: 33.33%; }
+    .bg-lines::after { left: 66.66%; }
+
+    /* MARQUEE */
+    .marquee-strip {
+      border-bottom: 1px solid rgba(245,245,240,0.08);
+      padding: 10px 0;
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
+      z-index: 10;
+    }
+    .marquee-inner {
+      display: inline-block;
+      animation: marquee 28s linear infinite;
+    }
+    .marquee-inner span {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--grey-600);
+      padding: 0 40px;
+    }
+    .marquee-inner span::after {
+      content: '·';
+      padding-left: 40px;
+    }
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* HEADER */
+    header {
+      position: relative;
+      z-index: 10;
+      border-bottom: 1px solid rgba(245,245,240,0.12);
+      padding: 0 48px;
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0 16px;
+      border-bottom: 1px solid rgba(245,245,240,0.06);
+    }
+    .header-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--grey-400);
+    }
+    .header-date {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--grey-400);
+    }
+    .header-main {
+      padding: 32px 0 28px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .brand-name {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(52px, 8vw, 96px);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 0.9;
+      color: var(--white);
+    }
+    .brand-tagline {
+      font-family: 'Crimson Pro', serif;
+      font-style: italic;
+      font-size: 15px;
+      color: var(--grey-400);
+      letter-spacing: 0.04em;
+      margin-top: 6px;
+    }
+    .header-description {
+      max-width: 300px;
+      font-family: 'Crimson Pro', serif;
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--grey-400);
+      text-align: right;
+    }
+
+    /* MAIN */
+    main {
+      flex: 1;
+      position: relative;
+      z-index: 10;
+      padding: 0 48px;
+    }
+
+    /* SEARCH */
+    .search-section {
+      padding: 56px 0 48px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      border-bottom: 1px solid rgba(245,245,240,0.08);
+    }
+    .search-headline {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+    .search-headline em {
+      font-style: italic;
+      color: var(--grey-400);
+    }
+    .search-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .input-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--grey-400);
+      display: block;
+      margin-bottom: 10px;
+    }
+    .pin-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(245,245,240,0.25);
+      color: var(--white);
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 8px 0 12px;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+    .pin-input::placeholder { color: var(--grey-600); font-weight: 400; }
+    .pin-input:focus { border-bottom-color: var(--white); }
+    .pin-input::-webkit-outer-spin-button,
+    .pin-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .search-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--white);
+      color: var(--black);
+      border: none;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 500;
+      padding: 16px 32px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      align-self: flex-start;
+    }
+    .search-btn:hover { background: var(--grey-100); gap: 18px; }
+    .search-btn .arrow { transition: transform 0.25s ease; }
+    .search-btn:hover .arrow { transform: translateX(4px); }
+
+    /* ERROR */
+    .error-block {
+      margin: 40px 0;
+      padding: 24px 32px;
+      border: 1px solid rgba(245,245,240,0.15);
+      border-left: 3px solid var(--white);
+    }
+    .error-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--grey-400);
+      margin-bottom: 8px;
+    }
+    .error-msg {
+      font-family: 'Crimson Pro', serif;
+      font-size: 17px;
+      color: var(--white);
+    }
+
+    /* RESULTS */
+    .result-section { padding: 56px 0; }
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 48px;
+    }
+    .result-city {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(36px, 6vw, 72px);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 0.95;
+    }
+    .result-city span {
+      display: block;
+      font-size: 0.4em;
+      font-weight: 400;
+      font-style: italic;
+      color: var(--grey-400);
+      letter-spacing: 0.02em;
+      margin-top: 8px;
+    }
+    .result-pin {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      color: var(--grey-400);
+      text-align: right;
+      margin-top: 6px;
+    }
+
+    /* DATA GRID */
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid rgba(245,245,240,0.12);
+    }
+    .data-cell {
+      padding: 32px 28px;
+      border-right: 1px solid rgba(245,245,240,0.08);
+      border-bottom: 1px solid rgba(245,245,240,0.08);
+      transition: background 0.3s ease;
+    }
+    .data-cell:last-child { border-right: none; }
+    .data-cell:hover { background: rgba(245,245,240,0.03); }
+    .data-cell-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--grey-400);
+      margin-bottom: 16px;
+    }
+    .data-cell-value {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      color: var(--white);
+    }
+    .data-cell-unit {
+      font-family: 'Crimson Pro', serif;
+      font-size: 15px;
+      font-weight: 300;
+      color: var(--grey-400);
+      margin-left: 4px;
+    }
+    .data-cell-sub {
+      font-family: 'Crimson Pro', serif;
+      font-style: italic;
+      font-size: 13px;
+      color: var(--grey-400);
+      margin-top: 10px;
+    }
+    .data-cell-icon {
+      font-size: 48px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .divider {
+      border: none;
+      border-top: 1px solid rgba(245,245,240,0.08);
+      margin: 16px 0;
+    }
+
+    /* AQI BAR */
+    .aqi-bar {
+      margin-top: 14px;
+      height: 2px;
+      background: rgba(245,245,240,0.1);
+      border-radius: 1px;
+      overflow: hidden;
+    }
+    .aqi-bar-fill { height: 100%; background: var(--white); transition: width 1s ease; }
+    .good .aqi-bar-fill      { width: 20%; }
+    .moderate .aqi-bar-fill  { width: 45%; }
+    .sensitive .aqi-bar-fill { width: 62%; }
+    .unhealthy .aqi-bar-fill { width: 80%; }
+    .hazardous .aqi-bar-fill { width: 100%; }
+
+    /* ANIMATIONS */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.6s ease forwards;
+    }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    .fade-up:nth-child(1) { animation-delay: 0.05s; }
+    .fade-up:nth-child(2) { animation-delay: 0.12s; }
+    .fade-up:nth-child(3) { animation-delay: 0.19s; }
+    .fade-up:nth-child(4) { animation-delay: 0.26s; }
+
+    /* FOOTER */
+    footer {
+      position: relative;
+      z-index: 10;
+      border-top: 1px solid rgba(245,245,240,0.12);
+      padding: 0 48px;
+    }
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 28px 0;
+    }
+    .footer-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .footer-sub {
+      font-family: 'Crimson Pro', serif;
+      font-style: italic;
+      font-size: 13px;
+      color: var(--grey-400);
+      margin-top: 4px;
+    }
+    .footer-credit {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--grey-600);
+      text-align: center;
+    }
+    .footer-credit strong { color: var(--grey-400); font-weight: 500; }
+    .footer-apis { display: flex; gap: 20px; }
+    .footer-api-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--grey-600);
+      border: 1px solid rgba(245,245,240,0.08);
+      padding: 4px 10px;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      header, main, footer { padding: 0 24px; }
+      .search-section { grid-template-columns: 1fr; gap: 36px; }
+      .header-description { display: none; }
+      .data-grid { grid-template-columns: 1fr 1fr; }
+      .result-header { flex-direction: column; gap: 12px; }
+      .footer-apis { display: none; }
+      .footer-inner { flex-direction: column; align-items: flex-start; gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-lines"></div>
+
+<!-- MARQUEE -->
+<div class="marquee-strip">
+  <div class="marquee-inner">
+    <span>Real-time Air Quality</span>
+    <span>Live Weather Data</span>
+    <span>India Coverage</span>
+    <span>Open-Meteo API</span>
+    <span>WAQI Network</span>
+    <span>PIN Code Search</span>
+    <span>Real-time Air Quality</span>
+    <span>Live Weather Data</span>
+    <span>India Coverage</span>
+    <span>Open-Meteo API</span>
+    <span>WAQI Network</span>
+    <span>PIN Code Search</span>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-top">
+    <span class="header-eyebrow">India Atmospheric Monitor</span>
+    <span class="header-date" id="live-date"></span>
+  </div>
+  <div class="header-main">
+    <div class="brand">
+      <div class="brand-name">Vayu</div>
+      <div class="brand-tagline">वायु — The breath of India's skies</div>
+    </div>
+    <p class="header-description">
+      Enter any Indian PIN code to retrieve live atmospheric readings — temperature, weather conditions, and air quality index from stations across the country.
+    </p>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+  <section class="search-section">
+    <div>
+      <h2 class="search-headline">
+        What is the air<br/>like <em>where you are?</em>
+      </h2>
+    </div>
+    <div>
+      <form class="search-form" method="POST" action="/">
+        <div>
+          <label class="input-label" for="pincode">Postal Index Number</label>
+          <input
+            class="pin-input"
+            type="number"
+            id="pincode"
+            name="pincode"
+            placeholder="110001"
+            maxlength="6"
+            required
+          />
+        </div>
+        <button class="search-btn" type="submit">
+          Fetch Readings <span class="arrow">→</span>
+        </button>
+      </form>
+    </div>
+  </section>
+
+  {% if error %}
+  <div class="error-block fade-up">
+    <div class="error-label">Error</div>
+    <div class="error-msg">{{ error }}</div>
+  </div>
+  {% endif %}
+
+  {% if data %}
+  <section class="result-section">
+    <div class="result-header">
+      <div>
+        <div class="result-city">
+          {{ data.city }}
+          <span>{{ data.state }}</span>
+        </div>
+      </div>
+      <div class="result-pin">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;color:var(--grey-600);margin-bottom:4px;">PIN CODE</div>
+        {{ data.pincode }}
+      </div>
+    </div>
+
+    <div class="data-grid">
+
+      <div class="data-cell fade-up">
+        <div class="data-cell-label">Temperature</div>
+        <div class="data-cell-value">
+          {{ data.temp }}<span class="data-cell-unit">°C</span>
+        </div>
+        <div class="data-cell-sub">Surface level</div>
+      </div>
+
+      <div class="data-cell fade-up">
+        <div class="data-cell-label">Condition</div>
+        <div class="data-cell-icon">{{ data.icon }}</div>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;letter-spacing:-0.01em;">{{ data.weather }}</div>
+      </div>
+
+      <div class="data-cell fade-up">
+        <div class="data-cell-label">Humidity</div>
+        <div class="data-cell-value">
+          {{ data.humidity }}<span class="data-cell-unit">%</span>
+        </div>
+        <hr class="divider"/>
+        <div class="data-cell-label">Wind Speed</div>
+        <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;">
+          {{ data.wind }}<span class="data-cell-unit" style="font-size:13px;"> km/h</span>
+        </div>
+      </div>
+
+      <div class="data-cell fade-up {{ data.aqi_cls }}">
+        <div class="data-cell-label">Air Quality Index</div>
+        <div class="data-cell-value">{{ data.aqi }}</div>
+        <div class="aqi-bar"><div class="aqi-bar-fill"></div></div>
+        <div class="data-cell-sub">{{ data.aqi_text }}</div>
+      </div>
+
+    </div>
+  </section>
+  {% endif %}
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">Vayu</div>
+      <div class="footer-sub">India Weather &amp; Air Quality Monitor</div>
+    </div>
+    <div class="footer-credit">
+      Crafted with precision by <strong>Seraj</strong>
+      <div style="font-family:'Crimson Pro',serif;font-style:italic;font-size:12px;color:var(--grey-600);margin-top:4px;">
+        Data refreshes on every query
+      </div>
+    </div>
+    <div class="footer-apis">
+      <span class="footer-api-tag">Open-Meteo</span>
+      <span class="footer-api-tag">WAQI</span>
+      <span class="footer-api-tag">Nominatim</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const d = new Date();
+  const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('live-date').textContent = d.toLocaleDateString('en-IN', opts);
+
+  const pinInput = document.getElementById('pincode');
+  if (pinInput) {
+    pinInput.addEventListener('input', function () {
+      if (this.value.length > 6) this.value = this.value.slice(0, 6);
+    });
+  }
+</script>
+
+</body>
+</html>
