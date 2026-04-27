@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Environment variables — NEVER upload this
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
