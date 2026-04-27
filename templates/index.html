@@ -4,578 +4,558 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Vayu — India Weather & AQI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Mono:wght@300;400;500&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --black: #0a0a0a;
-      --white: #f5f5f0;
-      --grey-100: #e8e8e3;
-      --grey-200: #d0d0c8;
-      --grey-400: #888880;
-      --grey-600: #444440;
-      --grey-800: #222220;
+      --white:   #ffffff;
+      --off:     #f7f9fc;
+      --ink:     #0a0f1e;
+      --ink2:    #3a4260;
+      --sky:     #3b8beb;
+      --sky-lt:  #e8f2fd;
+      --sky-md:  #b8d6f8;
+      --muted:   #8a93a8;
+      --border:  #e4e9f2;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { font-size: 16px; scroll-behavior: smooth; }
+    html { font-size: 16px; }
 
     body {
-      background: var(--black);
-      color: var(--white);
-      font-family: 'Crimson Pro', Georgia, serif;
+      background: var(--white);
+      color: var(--ink);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 300;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      position: relative;
-      overflow-x: hidden;
     }
 
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0.4;
-    }
-
-    .bg-lines {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-    }
-    .bg-lines::before, .bg-lines::after {
-      content: '';
-      position: absolute;
-      top: 0; bottom: 0;
-      width: 1px;
-      background: rgba(245,245,240,0.04);
-    }
-    .bg-lines::before { left: 33.33%; }
-    .bg-lines::after { left: 66.66%; }
-
-    /* MARQUEE */
-    .marquee-strip {
-      border-bottom: 1px solid rgba(245,245,240,0.08);
-      padding: 10px 0;
-      overflow: hidden;
-      white-space: nowrap;
-      position: relative;
-      z-index: 10;
-    }
-    .marquee-inner {
-      display: inline-block;
-      animation: marquee 28s linear infinite;
-    }
-    .marquee-inner span {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--grey-600);
-      padding: 0 40px;
-    }
-    .marquee-inner span::after {
-      content: '·';
-      padding-left: 40px;
-    }
-    @keyframes marquee {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-
-    /* HEADER */
-    header {
-      position: relative;
-      z-index: 10;
-      border-bottom: 1px solid rgba(245,245,240,0.12);
-      padding: 0 48px;
-    }
-    .header-top {
+    /* ── NAV ── */
+    nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 20px 0 16px;
-      border-bottom: 1px solid rgba(245,245,240,0.06);
-    }
-    .header-eyebrow {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: var(--grey-400);
-    }
-    .header-date {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 0.15em;
-      color: var(--grey-400);
-    }
-    .header-main {
-      padding: 32px 0 28px;
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 24px;
-    }
-    .brand-name {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(52px, 8vw, 96px);
-      font-weight: 900;
-      letter-spacing: -0.03em;
-      line-height: 0.9;
-      color: var(--white);
-    }
-    .brand-tagline {
-      font-family: 'Crimson Pro', serif;
-      font-style: italic;
-      font-size: 15px;
-      color: var(--grey-400);
-      letter-spacing: 0.04em;
-      margin-top: 6px;
-    }
-    .header-description {
-      max-width: 300px;
-      font-family: 'Crimson Pro', serif;
-      font-size: 14px;
-      line-height: 1.7;
-      color: var(--grey-400);
-      text-align: right;
+      padding: 22px 64px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
     }
 
-    /* MAIN */
-    main {
-      flex: 1;
-      position: relative;
-      z-index: 10;
-      padding: 0 48px;
-    }
-
-    /* SEARCH */
-    .search-section {
-      padding: 56px 0 48px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 64px;
-      align-items: center;
-      border-bottom: 1px solid rgba(245,245,240,0.08);
-    }
-    .search-headline {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(28px, 4vw, 44px);
-      font-weight: 700;
-      line-height: 1.15;
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--ink);
       letter-spacing: -0.02em;
     }
-    .search-headline em {
-      font-style: italic;
-      color: var(--grey-400);
+
+    .nav-logo span { color: var(--sky); }
+
+    .nav-tag {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
     }
-    .search-form {
+
+    .nav-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--sky);
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.75); }
+    }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 80px 64px 64px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
     }
-    .input-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
+
+    /* big sky circle decoration */
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -120px;
+      right: -120px;
+      width: 480px;
+      height: 480px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(59,139,235,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--sky);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hero-eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 28px; height: 1px;
+      background: var(--sky);
+    }
+
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(52px, 7vw, 96px);
+      font-weight: 300;
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+      max-width: 720px;
+    }
+
+    .hero-title strong {
+      font-weight: 600;
+      color: var(--sky);
+    }
+
+    .hero-sub {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 480px;
+      margin-top: 8px;
+    }
+
+    /* ── SEARCH ── */
+    .search-wrap {
+      padding: 52px 64px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .search-inner {
+      max-width: 560px;
+    }
+
+    .search-lbl {
+      font-size: 11px;
+      font-weight: 500;
       letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: var(--grey-400);
-      display: block;
-      margin-bottom: 10px;
+      color: var(--muted);
+      margin-bottom: 18px;
     }
+
+    .search-row {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      border: 1.5px solid var(--ink);
+      border-radius: 4px;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-row:focus-within {
+      border-color: var(--sky);
+      box-shadow: 0 0 0 4px rgba(59,139,235,0.1);
+    }
+
     .pin-input {
-      width: 100%;
+      flex: 1;
       background: transparent;
       border: none;
-      border-bottom: 1px solid rgba(245,245,240,0.25);
-      color: var(--white);
-      font-family: 'Playfair Display', serif;
-      font-size: 32px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      padding: 8px 0 12px;
       outline: none;
-      transition: border-color 0.3s ease;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 36px;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      color: var(--ink);
+      padding: 14px 20px;
     }
-    .pin-input::placeholder { color: var(--grey-600); font-weight: 400; }
-    .pin-input:focus { border-bottom-color: var(--white); }
+
+    .pin-input::placeholder { color: var(--border); }
     .pin-input::-webkit-outer-spin-button,
     .pin-input::-webkit-inner-spin-button { -webkit-appearance: none; }
 
     .search-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--white);
-      color: var(--black);
+      background: var(--ink);
+      color: white;
       border: none;
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
+      padding: 0 32px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
       letter-spacing: 0.18em;
       text-transform: uppercase;
-      font-weight: 500;
-      padding: 16px 32px;
       cursor: pointer;
-      transition: all 0.25s ease;
-      align-self: flex-start;
-    }
-    .search-btn:hover { background: var(--grey-100); gap: 18px; }
-    .search-btn .arrow { transition: transform 0.25s ease; }
-    .search-btn:hover .arrow { transform: translateX(4px); }
-
-    /* ERROR */
-    .error-block {
-      margin: 40px 0;
-      padding: 24px 32px;
-      border: 1px solid rgba(245,245,240,0.15);
-      border-left: 3px solid var(--white);
-    }
-    .error-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: var(--grey-400);
-      margin-bottom: 8px;
-    }
-    .error-msg {
-      font-family: 'Crimson Pro', serif;
-      font-size: 17px;
-      color: var(--white);
+      transition: background 0.2s;
+      white-space: nowrap;
     }
 
-    /* RESULTS */
-    .result-section { padding: 56px 0; }
-    .result-header {
+    .search-btn:hover { background: var(--sky); }
+
+    .search-hint {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── ERROR ── */
+    .error-bar {
+      margin: 0 64px;
+      margin-top: 32px;
+      padding: 16px 24px;
+      background: #fff5f5;
+      border-left: 3px solid #e53e3e;
+      border-radius: 0 4px 4px 0;
+      font-size: 14px;
+      color: #c53030;
+    }
+
+    /* ── RESULTS ── */
+    .results {
+      padding: 52px 64px;
       display: flex;
+      flex-direction: column;
+      gap: 48px;
+      animation: fadeUp 0.5s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Location row */
+    .loc-row {
+      display: flex;
+      align-items: baseline;
       justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 48px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
     }
-    .result-city {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(36px, 6vw, 72px);
-      font-weight: 900;
+
+    .loc-city {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(40px, 6vw, 72px);
+      font-weight: 300;
       letter-spacing: -0.03em;
-      line-height: 0.95;
+      line-height: 1;
+      color: var(--ink);
     }
-    .result-city span {
-      display: block;
-      font-size: 0.4em;
-      font-weight: 400;
-      font-style: italic;
-      color: var(--grey-400);
-      letter-spacing: 0.02em;
-      margin-top: 8px;
-    }
-    .result-pin {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 0.15em;
-      color: var(--grey-400);
-      text-align: right;
+
+    .loc-state {
+      font-size: 14px;
+      color: var(--muted);
       margin-top: 6px;
     }
 
-    /* DATA GRID */
-    .data-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      border-top: 1px solid rgba(245,245,240,0.12);
-    }
-    .data-cell {
-      padding: 32px 28px;
-      border-right: 1px solid rgba(245,245,240,0.08);
-      border-bottom: 1px solid rgba(245,245,240,0.08);
-      transition: background 0.3s ease;
-    }
-    .data-cell:last-child { border-right: none; }
-    .data-cell:hover { background: rgba(245,245,240,0.03); }
-    .data-cell-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: var(--grey-400);
-      margin-bottom: 16px;
-    }
-    .data-cell-value {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(32px, 4vw, 52px);
-      font-weight: 900;
-      letter-spacing: -0.02em;
-      line-height: 1;
-      color: var(--white);
-    }
-    .data-cell-unit {
-      font-family: 'Crimson Pro', serif;
-      font-size: 15px;
+    .loc-pin {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 32px;
       font-weight: 300;
-      color: var(--grey-400);
-      margin-left: 4px;
-    }
-    .data-cell-sub {
-      font-family: 'Crimson Pro', serif;
-      font-style: italic;
-      font-size: 13px;
-      color: var(--grey-400);
-      margin-top: 10px;
-    }
-    .data-cell-icon {
-      font-size: 48px;
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-    .divider {
-      border: none;
-      border-top: 1px solid rgba(245,245,240,0.08);
-      margin: 16px 0;
+      color: var(--sky);
+      letter-spacing: 0.1em;
     }
 
-    /* AQI BAR */
-    .aqi-bar {
-      margin-top: 14px;
-      height: 2px;
-      background: rgba(245,245,240,0.1);
-      border-radius: 1px;
+    /* Cards row — NO grid, flex with natural spacing */
+    .cards {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      background: var(--off);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 32px;
+      flex: 1;
+      min-width: 180px;
+      transition: box-shadow 0.25s, transform 0.25s;
+      position: relative;
       overflow: hidden;
     }
-    .aqi-bar-fill { height: 100%; background: var(--white); transition: width 1s ease; }
-    .good .aqi-bar-fill      { width: 20%; }
-    .moderate .aqi-bar-fill  { width: 45%; }
-    .sensitive .aqi-bar-fill { width: 62%; }
-    .unhealthy .aqi-bar-fill { width: 80%; }
-    .hazardous .aqi-bar-fill { width: 100%; }
 
-    /* ANIMATIONS */
-    .fade-up {
+    .card:hover {
+      box-shadow: 0 8px 32px rgba(10,15,30,0.08);
+      transform: translateY(-2px);
+    }
+
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--sky);
+      border-radius: 12px 12px 0 0;
       opacity: 0;
-      transform: translateY(20px);
-      animation: fadeUp 0.6s ease forwards;
+      transition: opacity 0.25s;
     }
-    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-    .fade-up:nth-child(1) { animation-delay: 0.05s; }
-    .fade-up:nth-child(2) { animation-delay: 0.12s; }
-    .fade-up:nth-child(3) { animation-delay: 0.19s; }
-    .fade-up:nth-child(4) { animation-delay: 0.26s; }
 
-    /* FOOTER */
-    footer {
-      position: relative;
-      z-index: 10;
-      border-top: 1px solid rgba(245,245,240,0.12);
-      padding: 0 48px;
+    .card:hover::after { opacity: 1; }
+
+    .card-lbl {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
     }
-    .footer-inner {
+
+    .card-val {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(38px, 4vw, 56px);
+      font-weight: 300;
+      line-height: 1;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+
+    .card-unit {
+      font-size: 16px;
+      color: var(--muted);
+      margin-left: 3px;
+    }
+
+    .card-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    /* Weather card */
+    .card-icon {
+      font-size: 44px;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    .card-weather-txt {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--ink);
+    }
+
+    /* AQI card special */
+    .card-aqi { border-color: var(--sky-md); background: var(--sky-lt); }
+    .card-aqi .card-val { color: var(--sky); }
+    .card-aqi::after { opacity: 1; }
+
+    .aqi-pill {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: var(--sky);
+      color: white;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .aqi-pill.moderate  { background: #d69e2e; }
+    .aqi-pill.sensitive { background: #dd6b20; }
+    .aqi-pill.unhealthy { background: #e53e3e; }
+    .aqi-pill.hazardous { background: #805ad5; }
+
+    /* Divider between sections */
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .section-divider::before,
+    .section-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      padding: 28px 64px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 28px 0;
-    }
-    .footer-brand {
-      font-family: 'Playfair Display', serif;
-      font-size: 18px;
-      font-weight: 700;
-    }
-    .footer-sub {
-      font-family: 'Crimson Pro', serif;
-      font-style: italic;
-      font-size: 13px;
-      color: var(--grey-400);
-      margin-top: 4px;
-    }
-    .footer-credit {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--grey-600);
-      text-align: center;
-    }
-    .footer-credit strong { color: var(--grey-400); font-weight: 500; }
-    .footer-apis { display: flex; gap: 20px; }
-    .footer-api-tag {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--grey-600);
-      border: 1px solid rgba(245,245,240,0.08);
-      padding: 4px 10px;
     }
 
-    /* RESPONSIVE */
+    .footer-left {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--ink);
+    }
+
+    .footer-left span { color: var(--sky); }
+
+    .footer-credit {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .footer-credit strong { color: var(--ink); font-weight: 500; }
+
+    .footer-right {
+      display: flex;
+      gap: 12px;
+    }
+
+    .api-chip {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--sky);
+      background: var(--sky-lt);
+      border: 1px solid var(--sky-md);
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+
+    /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
-      header, main, footer { padding: 0 24px; }
-      .search-section { grid-template-columns: 1fr; gap: 36px; }
-      .header-description { display: none; }
-      .data-grid { grid-template-columns: 1fr 1fr; }
-      .result-header { flex-direction: column; gap: 12px; }
-      .footer-apis { display: none; }
-      .footer-inner { flex-direction: column; align-items: flex-start; gap: 16px; }
+      nav, .hero, .search-wrap, .results, footer { padding-left: 24px; padding-right: 24px; }
+      .error-bar { margin-left: 24px; margin-right: 24px; }
+      .hero-title { font-size: 42px; }
+      .cards { flex-direction: column; }
+      .loc-row { flex-direction: column; gap: 8px; }
+      footer { flex-direction: column; gap: 16px; align-items: flex-start; }
+      .footer-right { display: none; }
     }
   </style>
 </head>
 <body>
 
-<div class="bg-lines"></div>
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Vay<span>u</span></div>
+  <div class="nav-tag">India Atmospheric Monitor</div>
+  <div class="nav-dot"></div>
+</nav>
 
-<!-- MARQUEE -->
-<div class="marquee-strip">
-  <div class="marquee-inner">
-    <span>Real-time Air Quality</span>
-    <span>Live Weather Data</span>
-    <span>India Coverage</span>
-    <span>Open-Meteo API</span>
-    <span>WAQI Network</span>
-    <span>PIN Code Search</span>
-    <span>Real-time Air Quality</span>
-    <span>Live Weather Data</span>
-    <span>India Coverage</span>
-    <span>Open-Meteo API</span>
-    <span>WAQI Network</span>
-    <span>PIN Code Search</span>
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Real-time · India</div>
+  <h1 class="hero-title">
+    Know the air<br/><strong>before you step outside.</strong>
+  </h1>
+  <p class="hero-sub">
+    Live weather conditions and air quality for every corner of India — looked up by your 6-digit PIN code.
+  </p>
+</div>
+
+<!-- SEARCH -->
+<div class="search-wrap">
+  <div class="search-inner">
+    <div class="search-lbl">Enter your PIN code</div>
+    <form method="POST" action="/">
+      <div class="search-row">
+        <input
+          class="pin-input"
+          type="number"
+          name="pincode"
+          id="pincode"
+          placeholder="110001"
+          maxlength="6"
+          required
+        />
+        <button class="search-btn" type="submit">Check Air →</button>
+      </div>
+      <div class="search-hint">6-digit Indian postal index number</div>
+    </form>
   </div>
 </div>
 
-<!-- HEADER -->
-<header>
-  <div class="header-top">
-    <span class="header-eyebrow">India Atmospheric Monitor</span>
-    <span class="header-date" id="live-date"></span>
-  </div>
-  <div class="header-main">
-    <div class="brand">
-      <div class="brand-name">Vayu</div>
-      <div class="brand-tagline">वायु — The breath of India's skies</div>
-    </div>
-    <p class="header-description">
-      Enter any Indian PIN code to retrieve live atmospheric readings — temperature, weather conditions, and air quality index from stations across the country.
-    </p>
-  </div>
-</header>
+{% if error %}
+<div class="error-bar">⚠ {{ error }}</div>
+{% endif %}
 
-<!-- MAIN -->
-<main>
-  <section class="search-section">
+{% if data %}
+<div class="results">
+
+  <!-- Location -->
+  <div class="loc-row">
     <div>
-      <h2 class="search-headline">
-        What is the air<br/>like <em>where you are?</em>
-      </h2>
+      <div class="loc-city">{{ data.city }}</div>
+      <div class="loc-state">{{ data.state }}, India</div>
     </div>
-    <div>
-      <form class="search-form" method="POST" action="/">
-        <div>
-          <label class="input-label" for="pincode">Postal Index Number</label>
-          <input
-            class="pin-input"
-            type="number"
-            id="pincode"
-            name="pincode"
-            placeholder="110001"
-            maxlength="6"
-            required
-          />
-        </div>
-        <button class="search-btn" type="submit">
-          Fetch Readings <span class="arrow">→</span>
-        </button>
-      </form>
-    </div>
-  </section>
-
-  {% if error %}
-  <div class="error-block fade-up">
-    <div class="error-label">Error</div>
-    <div class="error-msg">{{ error }}</div>
+    <div class="loc-pin">{{ data.pincode }}</div>
   </div>
-  {% endif %}
 
-  {% if data %}
-  <section class="result-section">
-    <div class="result-header">
-      <div>
-        <div class="result-city">
-          {{ data.city }}
-          <span>{{ data.state }}</span>
-        </div>
-      </div>
-      <div class="result-pin">
-        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;color:var(--grey-600);margin-bottom:4px;">PIN CODE</div>
-        {{ data.pincode }}
-      </div>
+  <!-- Cards -->
+  <div class="cards">
+
+    <div class="card">
+      <div class="card-lbl">Temperature</div>
+      <div class="card-val">{{ data.temp }}<span class="card-unit">°C</span></div>
+      <div class="card-sub">Surface · 2m above ground</div>
     </div>
 
-    <div class="data-grid">
-
-      <div class="data-cell fade-up">
-        <div class="data-cell-label">Temperature</div>
-        <div class="data-cell-value">
-          {{ data.temp }}<span class="data-cell-unit">°C</span>
-        </div>
-        <div class="data-cell-sub">Surface level</div>
-      </div>
-
-      <div class="data-cell fade-up">
-        <div class="data-cell-label">Condition</div>
-        <div class="data-cell-icon">{{ data.icon }}</div>
-        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;letter-spacing:-0.01em;">{{ data.weather }}</div>
-      </div>
-
-      <div class="data-cell fade-up">
-        <div class="data-cell-label">Humidity</div>
-        <div class="data-cell-value">
-          {{ data.humidity }}<span class="data-cell-unit">%</span>
-        </div>
-        <hr class="divider"/>
-        <div class="data-cell-label">Wind Speed</div>
-        <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;">
-          {{ data.wind }}<span class="data-cell-unit" style="font-size:13px;"> km/h</span>
-        </div>
-      </div>
-
-      <div class="data-cell fade-up {{ data.aqi_cls }}">
-        <div class="data-cell-label">Air Quality Index</div>
-        <div class="data-cell-value">{{ data.aqi }}</div>
-        <div class="aqi-bar"><div class="aqi-bar-fill"></div></div>
-        <div class="data-cell-sub">{{ data.aqi_text }}</div>
-      </div>
-
+    <div class="card">
+      <div class="card-lbl">Condition</div>
+      <div class="card-icon">{{ data.icon }}</div>
+      <div class="card-weather-txt">{{ data.weather }}</div>
     </div>
-  </section>
-  {% endif %}
-</main>
+
+    <div class="card">
+      <div class="card-lbl">Humidity</div>
+      <div class="card-val">{{ data.humidity }}<span class="card-unit">%</span></div>
+      <div class="card-sub">Wind · {{ data.wind }} km/h</div>
+    </div>
+
+    <div class="card card-aqi">
+      <div class="card-lbl">Air Quality Index</div>
+      <div class="card-val">{{ data.aqi }}</div>
+      <div><span class="aqi-pill {{ data.aqi_cls }}">{{ data.aqi_text }}</span></div>
+    </div>
+
+  </div>
+
+</div>
+{% endif %}
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-inner">
-    <div>
-      <div class="footer-brand">Vayu</div>
-      <div class="footer-sub">India Weather &amp; Air Quality Monitor</div>
-    </div>
-    <div class="footer-credit">
-      Crafted with precision by <strong>Seraj</strong>
-      <div style="font-family:'Crimson Pro',serif;font-style:italic;font-size:12px;color:var(--grey-600);margin-top:4px;">
-        Data refreshes on every query
-      </div>
-    </div>
-    <div class="footer-apis">
-      <span class="footer-api-tag">Open-Meteo</span>
-      <span class="footer-api-tag">WAQI</span>
-      <span class="footer-api-tag">Nominatim</span>
-    </div>
+  <div class="footer-left">Vay<span>u</span></div>
+  <div class="footer-credit">
+    Crafted with care by <strong>Seraj</strong><br/>
+    <span style="font-size:11px;">Data refreshes on every search</span>
+  </div>
+  <div class="footer-right">
+    <span class="api-chip">Open-Meteo</span>
+    <span class="api-chip">WAQI</span>
+    <span class="api-chip">Nominatim</span>
   </div>
 </footer>
 
 <script>
-  const d = new Date();
-  const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  document.getElementById('live-date').textContent = d.toLocaleDateString('en-IN', opts);
-
   const pinInput = document.getElementById('pincode');
   if (pinInput) {
     pinInput.addEventListener('input', function () {
