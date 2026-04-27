@@ -49,7 +49,8 @@ def home():
         try:
             pincode = request.form['pincode'].strip()
 
-            geo_resp = requests.get(
+            # ✅ FIX: specific User-Agent required by Nominatim
+            response = requests.get(
                 'https://nominatim.openstreetmap.org/search',
                 params={
                     'postalcode': pincode,
@@ -57,9 +58,16 @@ def home():
                     'format': 'json',
                     'limit': 1
                 },
-                headers={'User-Agent': 'WeatherAQIApp/1.0'},
+                headers={
+                    'User-Agent': 'VayuWeatherApp/1.0 (vayu-weather-aqi.onrender.com)'
+                },
                 timeout=10
-            ).json()
+            )
+
+            if response.status_code != 200:
+                raise Exception("Location service unavailable. Please try again.")
+
+            geo_resp = response.json()
 
             if not geo_resp:
                 raise Exception(f"PIN code '{pincode}' not found. Please check and try again.")
@@ -72,6 +80,7 @@ def home():
             city = display_parts[0].strip() if display_parts else "Unknown"
             state = display_parts[-3].strip() if len(display_parts) >= 3 else ""
 
+            # Fetch weather from Open-Meteo
             weather_resp = requests.get(
                 'https://api.open-meteo.com/v1/forecast',
                 params={
@@ -80,14 +89,18 @@ def home():
                     'current': 'temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m'
                 },
                 timeout=10
-            ).json()
+            )
 
-            current = weather_resp['current']
+            if weather_resp.status_code != 200:
+                raise Exception("Weather service unavailable. Please try again.")
+
+            current = weather_resp.json()['current']
             temp = current['temperature_2m']
             weather_code = current['weather_code']
             humidity = current.get('relative_humidity_2m', '--')
             wind = current.get('wind_speed_10m', '--')
 
+            # Fetch AQI from WAQI
             try:
                 aqi_resp = requests.get(
                     f'https://api.waqi.info/feed/geo:{lat};{lon}/?token={WAQI_TOKEN}',
@@ -103,6 +116,8 @@ def home():
                 'city': city,
                 'state': state,
                 'pincode': pincode,
+                'lat': lat,
+                'lon': lon,
                 'temp': temp,
                 'weather': weather_code_to_text(weather_code),
                 'icon': weather_code_to_icon(weather_code),
